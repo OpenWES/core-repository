@@ -11,9 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  * @author xuanloc0511@gmail.com
- * 
+ *
  */
 class QuerySpliteratorEnv {
 
@@ -34,6 +34,7 @@ class QuerySpliteratorEnv {
         if (parallelism <= 0) {
             throw new RuntimeException("worker-size must larger than zero");
         }
+        parallelism = Math.max(Runtime.getRuntime().availableProcessors(), parallelism);
         final ForkJoinWorkerThreadFactory workerThreadFactory = (ForkJoinPool pool) -> {
             final ForkJoinWorkerThread worker = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
             worker.setName("queryspliterator-" + worker.getPoolIndex());
