@@ -1,0 +1,5 @@
+builder: 'mvn'
+label: 'SNAPSHOT'
+options:
+  - "javadoc:jar"
+  - "source:jar"

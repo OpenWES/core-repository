@@ -1,0 +1,22 @@
+version: 1.0.0
+git:
+  name: Loc Ngo
+  token: ${GIT_TOKEN}
+  email: xuanloc0511@gmail.com
+docker:
+  hosts:
+  - unix:///var/run/docker.sock
+  - tcp://127.0.0.1:2375
+repositories:
+- name: artifactory
+  stable:
+    address: https://openwes.jfrog.io/artifactory/libs-release/
+    username: ${JFROG_USER}
+    password: ${JFROG_PASS}
+  unstable:
+    address: https://openwes.jfrog.io/artifactory/libs-snapshot
+    username: ${JFROG_USER}
+    password: ${JFROG_PASS}
+modules:
+- name: openwes-core
+  path: .
