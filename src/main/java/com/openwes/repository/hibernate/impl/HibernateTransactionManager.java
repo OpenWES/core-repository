@@ -8,8 +8,8 @@ import com.openwes.repository.DataSourceManager;
  *
  * @author xuanloc0511@gmail.com
  */
-@Implementation(source = Transaction.class)
-public class HibernateTransactionManager implements Transaction{
+@Implementation(of = Transaction.class)
+public class HibernateTransactionManager implements Transaction {
 
     @Override
     public boolean begin() throws Exception {
