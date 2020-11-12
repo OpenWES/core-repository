@@ -55,7 +55,7 @@ public abstract class HibernateRepository extends Repository {
         throw new RuntimeException("DataAccessProvider for " + dataSource() + " is not HibernateProvider");
     }
 
-    private SessionFactory findSessionFactory() {
+    protected final SessionFactory findSessionFactory() {
         RepositoryProvider provider = findProvider();
         if (provider instanceof HibernateProvider) {
             return ((HibernateProvider) provider).getSessionFactory();
@@ -63,11 +63,11 @@ public abstract class HibernateRepository extends Repository {
         throw new RuntimeException("DataAccessProvider for " + dataSource() + " is not HibernateProvider");
     }
 
-    private Session getSession() {
+    protected final Session getSession() {
         return openTransaction();
     }
 
-    private Session openTransaction() {
+    protected final Session openTransaction() {
         RepositoryProvider provider = findProvider();
         if (provider instanceof HibernateProvider) {
             /**
@@ -85,7 +85,18 @@ public abstract class HibernateRepository extends Repository {
         throw new RuntimeException("DataAccessProvider for " + dataSource() + " is not HibernateProvider");
     }
 
-    private void rollbackTransaction(Session session, Exception e) {
+    protected final boolean isInTransaction() {
+        RepositoryProvider provider = findProvider();
+        if (provider instanceof HibernateProvider) {
+            HibernateTransaction _tx = ((HibernateProvider) provider).currentTransaction();
+            if (_tx != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected final void rollbackTransaction(Session session, Exception e) {
         LOGGER.error("Execute transaction (state={}) error", session.getTransaction().getStatus(), e);
         if (session.getTransaction().isActive()
                 && session.getTransaction().getStatus() != TransactionStatus.ROLLED_BACK
@@ -98,7 +109,7 @@ public abstract class HibernateRepository extends Repository {
         }
     }
 
-    private void commitTransaction() {
+    protected final void commitTransaction() {
         RepositoryProvider provider = findProvider();
         if (provider instanceof HibernateProvider) {
             HibernateTransaction _tx = ((HibernateProvider) provider).currentTransaction();
@@ -123,7 +134,7 @@ public abstract class HibernateRepository extends Repository {
         throw new RuntimeException("DataAccessProvider for " + dataSource() + " is not HibernateProvider");
     }
 
-    private void closeSessionIfNeed() {
+    protected final void closeSessionIfNeed() {
         RepositoryProvider provider = findProvider();
         if (provider instanceof HibernateProvider) {
             HibernateTransaction _tx = ((HibernateProvider) provider).currentTransaction();

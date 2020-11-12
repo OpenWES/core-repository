@@ -12,6 +12,13 @@ import java.util.Map;
  */
 public interface FindMany<I, O> {
 
+    /**
+     *
+     * @param query
+     * @param arguments
+     * @param dto
+     * @return
+     */
     public List<O> onQuery(String query, Map<String, Object> arguments, Class<O> dto);
 
 }

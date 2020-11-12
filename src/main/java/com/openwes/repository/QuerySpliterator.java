@@ -68,6 +68,10 @@ public class QuerySpliterator<E> {
     }
 
     public int executeUpdate(UpdateMany update) {
+        return executeUpdate(update, false);
+    }
+
+    public int executeUpdate(UpdateMany update, boolean inCurrentThread) {
         if (collectionValue.size() <= maxCollectionSize) {
             arguments.put(collectionKey, collectionValue);
             return update.onUpdate(query, arguments);
@@ -84,8 +88,17 @@ public class QuerySpliterator<E> {
                         return update.onUpdate(query, args);
                     });
                 });
+
         if (tasks.isEmpty()) {
             return 0;
+        }
+        if (inCurrentThread) {
+            int i = tasks.stream()
+                    .mapToInt((t) -> {
+                        return t.onExec();
+                    }).sum();
+            LOGGER.info("execute {} queries in {} ms", tasks.size(), cw.timeElapsedMS());
+            return i;
         }
         int rs = QuerySpliteratorEnv.env().invokeUpdate(txId, tasks);
         LOGGER.info("execute {} queries in {} ms", tasks.size(), cw.timeElapsedMS());
@@ -114,6 +127,41 @@ public class QuerySpliterator<E> {
         }
         List<E> results = new ArrayList<>();
         results.addAll(QuerySpliteratorEnv.env().invoke(txId, tasks));
+        if (comparator != null) {
+            Collections.sort(results, comparator);
+        }
+        LOGGER.info("execute {} queries in {} ms", tasks.size(), ClockService.nowMS() - started);
+        return results;
+    }
+
+    public List<E> findMany(FindMany<?, E> findMany, boolean inCurrentThread) {
+        if (collectionValue.size() <= maxCollectionSize) {
+            arguments.put(collectionKey, collectionValue);
+            return findMany.onQuery(query, arguments, dto);
+        }
+        LOGGER.info("using query-spliterator for query '{}'", query);
+        List<QueryTask> tasks = new ArrayList<>();
+        long started = ClockService.nowMS();
+        Iterators.partition(collectionValue.iterator(), maxCollectionSize)
+                .forEachRemaining(t -> {
+                    tasks.add((QueryTask) () -> {
+                        Map<String, Object> args = new HashMap<>();
+                        args.putAll(arguments);
+                        args.put(collectionKey, t);
+                        return findMany.onQuery(query, args, dto);
+                    });
+                });
+        if (tasks.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<E> results = new ArrayList<>();
+        if (inCurrentThread) {
+            tasks.forEach((t) -> {
+                results.addAll((Collection<? extends E>) t.onExec());
+            });
+        } else {
+            results.addAll(QuerySpliteratorEnv.env().invoke(txId, tasks));
+        }
         if (comparator != null) {
             Collections.sort(results, comparator);
         }

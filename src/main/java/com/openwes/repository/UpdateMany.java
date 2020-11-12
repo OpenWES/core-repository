@@ -9,6 +9,12 @@ import java.util.Map;
  */
 public interface UpdateMany {
 
+    /**
+     *
+     * @param query
+     * @param arguments
+     * @return
+     */
     public int onUpdate(String query, Map<String, Object> arguments);
 
 }
